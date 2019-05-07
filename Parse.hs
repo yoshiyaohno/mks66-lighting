@@ -64,7 +64,7 @@ drawTriangle tr = do
         --(map S.lightPx toDraw)
 
 drawTriangles :: (MonadState DrawMats m) => [S.Triangle Double] -> m ()
-drawTriangles = mapM_ drawTriangle
+drawTriangles = mapM_ drawTriangle . S.bfCull
 
 push :: (MonadState DrawMats m) => m ()
 push = modify pushTransform
