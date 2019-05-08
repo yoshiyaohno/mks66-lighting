@@ -1,3 +1,5 @@
+module Main where
+
 import Line
 import Transform
 import Solids

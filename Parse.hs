@@ -61,7 +61,6 @@ drawTriangle tr = do
         c = S.colorTriangle tr
     put $ dm {getZBuf = newZB}
     modify.modScreen $ draw [((S.pgetX p, S.pgetY p), c) | p <- toDraw]
-        --(map S.lightPx toDraw)
 
 drawTriangles :: (MonadState DrawMats m) => [S.Triangle Double] -> m ()
 drawTriangles = mapM_ drawTriangle . S.bfCull
@@ -77,7 +76,7 @@ box args = do
     dm <- get
     let [cx, cy, cz, w, h, d] = map read args
         tris = S.box cx cy cz w h d
-    modify $ modScreen $ S.drawTriangles red $ trTris dm tris
+    drawTriangles $ trTris dm tris
 
 sphere :: (MonadState DrawMats m) => Args -> m ()
 sphere args = do
