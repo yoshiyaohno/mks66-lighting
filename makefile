@@ -1,10 +1,9 @@
-default: Main
+default: main
 	./Main script
 
-Main: Main.hs Parse.hs Transform.hs Line.hs Solids.hs Screen.hs DrawMats.hs
+main: Main.hs Parse.hs Transform.hs Line.hs Solids.hs Screen.hs DrawMats.hs \
+		Lighting.hs
 	ghc -dynamic -O2 Main.hs
-
-build: Main
 
 clean:
 	rm *.hi *.o Main .tempimg.ppm

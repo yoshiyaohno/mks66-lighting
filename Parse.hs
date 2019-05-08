@@ -6,6 +6,7 @@ import Screen
 import qualified Solids as S
 import qualified Transform as T
 import DrawMats
+import Lighting
 
 import System.Directory
 import System.IO
@@ -52,18 +53,6 @@ parse (a:b:xs) =
             case lookup (head.words $ a) wArgs of
                 Just c1 -> (c1 $ words b) : (parse xs)
                 Nothing -> parse (b:xs)
-
-drawTriangle :: (MonadState DrawMats m) => S.Triangle Double -> m ()
-drawTriangle tr = do
-    dm <- get
-    let pxs = S.scanTriangle tr
-        (toDraw, newZB) = runState (S.plotPxs pxs) (getZBuf dm)
-        c = S.colorTriangle tr
-    put $ dm {getZBuf = newZB}
-    modify.modScreen $ draw [((S.pgetX p, S.pgetY p), c) | p <- toDraw]
-
-drawTriangles :: (MonadState DrawMats m) => [S.Triangle Double] -> m ()
-drawTriangles = mapM_ drawTriangle . S.bfCull
 
 push :: (MonadState DrawMats m) => m ()
 push = modify pushTransform

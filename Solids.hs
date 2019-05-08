@@ -5,7 +5,6 @@ import Line
 import Screen
 import Transform
 
-import Data.Maybe
 import Control.Monad.State
 import Data.Array.Unboxed
 import qualified Data.List  as L
@@ -19,47 +18,17 @@ newtype Pixel = Pixel {getTT :: ((Int, Int), Double)}
 piStep :: Floating a => a
 --piStep = pi/5
 piStep = pi/27
---piStep = pi/77
+--piStep = pi/57
 
-colorTriangle :: Triangle Double -> Color
---hardcoded light moments
-colorTriangle tr =
-    let norm = normalize $ normal tr
-        view = Vect 0 0 1 0
-        hhhh = normalize $ Vect 0 1 1 0
-        lght = Vect 0 1 0 0
-        ka   = 0.1; kd = 0.3; ks = 0.9
-        ia   = 255; id = 255; is = 255
-        alph = 14
-        lDn  = max 0 $ lght`dot`norm
-        hDn  = max 0 $ hhhh`dot`norm
-        intensity = min 255 $ round
-            (ka*ia + kd*lDn*id + is*ks*(hDn**alph))
-    in
-        color intensity intensity intensity
+scanTriangle :: Triangle Double -> [Pixel]
+scanTriangle (Triangle (a, b, c)) = let
+    [bot, mid, top] = map vdToPix (L.sortOn getY [a, b, c])
+    e1 = pixLiner bot top
+    e2 = pixLiner mid top ++ tail (pixLiner bot mid)
+    es = if 2*(pgetX mid) <= (pgetX top + pgetX bot)
+            then zip e2 e1 else zip e1 e2
+    in concatMap (uncurry pixScan) es
 
-lightPx :: Pixel -> ((Int, Int), Color)
-lightPx (Pixel ((x,y),z)) = ((x, y), color 0 0 (255 - round (z/3)))
-
-plotPxs :: (MonadState ZBuf m) => [Pixel] -> m [Pixel]
-plotPxs pxs = do
-    zb <- get
-    let ok = [p | (Pixel p) <- pxs, zb!(fst p) > snd p]
-    modify $ modZB ok
-    return $ map Pixel ok
-
---plotPx :: MonadState ZBuf m => Pixel -> m (Maybe Pixel)
---plotPx (Pixel x y z) = do
---    zb <- get
---    if z < zb!(x,y)
---        then do modify $ modZB [((x,y), z)]
---                return (Just $ Pixel x y z)
---        else return Nothing
-
-drawTriangle :: Color -> Triangle Double -> Screen -> Screen
-drawTriangle c t =
-    draw [((pgetX px, pgetY px), c) | px <- scanTriangle t]
-    
 lh :: (Eq a, Enum a, Fractional a) =>
     (Vect a -> a) -> Vect a -> Vect a -> [Vect a]
 lh = lineHelper
@@ -79,15 +48,6 @@ pixScan (Pixel ((x0,y0),z0)) (Pixel ((x1,y1),z1))
                     (fromIntegral x)*dz/(fromIntegral dx) + z0)
                     | x <- [0, (signum dx) .. dx]]
     where dx = x1 - x0; dz = z1 - z0
-
-scanTriangle :: Triangle Double -> [Pixel]
-scanTriangle (Triangle (a, b, c)) = let
-    [bot, mid, top] = map vdToPix (L.sortOn getY [a, b, c])
-    e1 = pixLiner bot top
-    e2 = pixLiner mid top ++ tail (pixLiner bot mid)
-    es = if 2*(pgetX mid) <= (pgetX top + pgetX bot)
-            then zip e2 e1 else zip e1 e2
-    in concatMap (uncurry pixScan) es
 
 {-# INLINE pgetX #-}
 pgetX :: Pixel -> Int
