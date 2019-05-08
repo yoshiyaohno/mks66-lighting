@@ -13,15 +13,13 @@ import qualified Data.List  as L
 import Control.Exception
 
 newtype Triangle a = Triangle (Vect a, Vect a, Vect a) deriving (Show, Eq)
-data Pixel = Pixel
-    { pgetX :: Int
-    , pgetY :: Int
-    , pgetZ :: Double
-    } deriving (Eq, Show)
+newtype Pixel = Pixel {getTT :: ((Int, Int), Double)}
+    deriving (Eq, Show)
 
 piStep :: Floating a => a
-piStep = pi/17
---piStep = pi/30
+--piStep = pi/5
+--piStep = pi/27
+piStep = pi/77
 
 colorTriangle :: Triangle Double -> Color
 --hardcoded light moments
@@ -30,9 +28,9 @@ colorTriangle tr =
         view = Vect 0 0 1 0
         hhhh = normalize $ Vect 0 1 1 0
         lght = Vect 0 1 0 0
-        ka   = 0.2; kd = 0.4; ks = 0.8
+        ka   = 0.1; kd = 0.3; ks = 0.9
         ia   = 255; id = 255; is = 255
-        alph = 11
+        alph = 14
         lDn  = max 0 $ lght`dot`norm
         hDn  = max 0 $ hhhh`dot`norm
         intensity = min 255 $ round
@@ -41,18 +39,22 @@ colorTriangle tr =
         color intensity intensity intensity
 
 lightPx :: Pixel -> ((Int, Int), Color)
-lightPx (Pixel x y z) = ((x, y), color 0 0 (255 - round (z/3)))
+lightPx (Pixel ((x,y),z)) = ((x, y), color 0 0 (255 - round (z/3)))
 
 plotPxs :: (MonadState ZBuf m) => [Pixel] -> m [Pixel]
-plotPxs = fmap catMaybes . mapM plotPx
-
-plotPx :: MonadState ZBuf m => Pixel -> m (Maybe Pixel)
-plotPx (Pixel x y z) = do
+plotPxs pxs = do
     zb <- get
-    if z < zb!(x,y)
-        then do modify $ modZB [((x,y), z)]
-                return (Just $ Pixel x y z)
-        else return Nothing
+    let ok = [p | (Pixel p) <- pxs, zb!(fst p) > snd p]
+    modify $ modZB ok
+    return $ map Pixel ok
+
+--plotPx :: MonadState ZBuf m => Pixel -> m (Maybe Pixel)
+--plotPx (Pixel x y z) = do
+--    zb <- get
+--    if z < zb!(x,y)
+--        then do modify $ modZB [((x,y), z)]
+--                return (Just $ Pixel x y z)
+--        else return Nothing
 
 drawTriangle :: Color -> Triangle Double -> Screen -> Screen
 drawTriangle c t =
@@ -70,11 +72,12 @@ pixLiner p0 p1 = map vdToPix (lh getY (pixToVd p0) (pixToVd p1))
 
 -- scans across a line of pixels (finding z values in between)
 pixScan :: Pixel -> Pixel -> [Pixel]
-pixScan (Pixel x0 y0 z0) (Pixel x1 y1 z1)
+pixScan (Pixel ((x0,y0),z0)) (Pixel ((x1,y1),z1))
     | y0 /= y1  = error "mismatched y values in pixScan"
-    | dx == 0   = [Pixel x0 y0 z0]
-    | otherwise = [Pixel (x+x0) y0 ((fromIntegral x)*dz/(fromIntegral dx) + z0)
-                  | x <- [0, (signum dx) .. dx]]
+    | dx == 0   = [Pixel ((x0,y0),z0)]
+    | otherwise = [Pixel ((x+x0, y0),
+                    (fromIntegral x)*dz/(fromIntegral dx) + z0)
+                    | x <- [0, (signum dx) .. dx]]
     where dx = x1 - x0; dz = z1 - z0
 
 scanTriangle :: Triangle Double -> [Pixel]
@@ -86,23 +89,22 @@ scanTriangle (Triangle (a, b, c)) = let
             then zip e2 e1 else zip e1 e2
     in concatMap (uncurry pixScan) es
 
+{-# INLINE pgetX #-}
+pgetX :: Pixel -> Int
+pgetX = fst.fst.getTT
+
+{-# INLINE pgetY #-}
+pgetY :: Pixel -> Int
+pgetY = snd.fst.getTT
+
 vdToPix :: Vect Double -> Pixel
-vdToPix (Vect x y z q) = Pixel (round x) (round y) z
+vdToPix (Vect x y z q) = Pixel ((round x, round y), z)
 -- why
 pixToVd :: Pixel -> Vect Double
-pixToVd (Pixel x y z) = Vect (fromIntegral x) (fromIntegral y) z 1
+pixToVd (Pixel ((x,y),z)) = Vect (fromIntegral x) (fromIntegral y) z 1
 
 toEdges :: Triangle a -> [Line a]
 toEdges (Triangle (a, b, c)) = [Line a b, Line b c, Line a c]
-
-drawTriangles :: Color -> [Triangle Double] -> Screen -> Screen
-drawTriangles c = foldr (.) id . zipWith drawTriangle
-    (cycle [red, grn, blu, wht]) . bfCull
-
---drawTriangles :: Color -> [Triangle Double] -> Screen -> Screen
---drawTriangles c =
---    foldr (.) id . map (drawLine c . fmap round)
---        . concat . map toEdges . bfCull
 
 bfCull :: (Num a, Ord a) => [Triangle a] -> [Triangle a]
 bfCull = filter ((>0) . getZ . normal)
