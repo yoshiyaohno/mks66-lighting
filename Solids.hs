@@ -5,8 +5,8 @@ import Line
 import Screen
 import Transform
 
-import Control.Monad.State
 import Data.Array.Unboxed
+import Control.Monad.State
 import qualified Data.List  as L
 
 import Control.Exception

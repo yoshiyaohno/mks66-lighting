@@ -11,8 +11,6 @@ data DrawMats =
      DrawMats { getScreen :: Screen
               , getZBuf   :: ZBuf
               , getTStack :: [Transform Double]
---            , getEdges :: [Vect Double]
---            , getTriangles :: [Triangle Double]
               }
 
 emptyDM :: DrawMats
@@ -20,8 +18,6 @@ emptyDM = DrawMats
     { getScreen = emptyScreen blk (500,500)
     , getTStack = [ident]
     , getZBuf   = emptyZB (500,500)
---  , getEdges = []
---  , getTriangles = []
     }
 
 trTris :: DrawMats -> [Triangle Double] -> [Triangle Double]

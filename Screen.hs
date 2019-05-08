@@ -1,8 +1,8 @@
 {-# LANGUAGE BinaryLiterals #-}
 module Screen where
 
-import Data.Bits
 import Data.Int
+import Data.Bits
 import Data.Array.Unboxed
 
 type ZBuf   = UArray (Int, Int) Double

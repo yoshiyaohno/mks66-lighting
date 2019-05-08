@@ -1,26 +1,24 @@
 {-# LANGUAGE FlexibleContexts #-}
 module Parse where
 
-import Line
 import Screen
+import Line
 import qualified Solids as S
 import qualified Transform as T
 import DrawMats
 import Lighting
 
-import System.Directory
 import System.IO
+import System.Process
+import System.Directory
 import System.Environment
 import Control.Monad.State
-import System.Process
 import qualified Data.Map.Strict as M
 import qualified Data.List as L
 
 noArgs :: (MonadState DrawMats m, MonadIO m) => [(String, m ())]
-noArgs = [ ("ident", ident)
---       , ("apply", apply)
-         , ("display", display)
---       , ("clear", clear)
+noArgs = [ ("display", display)
+         , ("clear", clear)
          , ("push", push)
          , ("pop", pop)
          ]
@@ -107,23 +105,9 @@ bezier args = do
 clean :: (MonadState DrawMats m) => m ()
 clean = modify . modScreen $ const (emptyScreen blk (499,499))
 
---draw :: (MonadState DrawMats m, MonadIO m) => m ()
---draw = do
---    dm <- get
---    modify $ modScreen $ (drawEdges red (getEdges dm))
---    modify $ modScreen $ (S.drawTriangles red (getTriangles dm))
-
---apply :: (MonadState DrawMats m) => m ()
---apply = do
---    dm <- get
---    modify . modEdges $ T.mmult (getTransform dm)
---    modify . modTriangles $ map (S.trTriangle $ getTransform dm)
-
 save :: (MonadState DrawMats m, MonadIO m) => Args -> m ()
 save args = do
     let path = head args
---  clean
---  draw
     dm <- get
     liftIO $ do
         writeFile ".tempimg.ppm" (printPixels $ getScreen dm)
@@ -132,8 +116,6 @@ save args = do
 
 display :: (MonadState DrawMats m, MonadIO m) => m ()
 display = do
---  clean
---  draw
     dm <- get
     liftIO $ do
         writeFile ".tempimg.ppm" (printPixels $ getScreen dm)
@@ -174,6 +156,8 @@ move :: (MonadState DrawMats m) => Args -> m ()
 move args = modify . modTransform $ (mappend $ T.trans x y z)
     where [x, y, z] = map read args
 
---clear :: (MonadState DrawMats m) => m ()
---clear = modify . modEdges $ const []
+clear :: (MonadState DrawMats m) => m ()
+clear = do
+    dm <- get
+    put emptyDM {getTStack = getTStack dm}
 
