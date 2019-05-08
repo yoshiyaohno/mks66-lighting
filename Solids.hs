@@ -18,8 +18,8 @@ newtype Pixel = Pixel {getTT :: ((Int, Int), Double)}
 
 piStep :: Floating a => a
 --piStep = pi/5
---piStep = pi/27
-piStep = pi/77
+piStep = pi/27
+--piStep = pi/77
 
 colorTriangle :: Triangle Double -> Color
 --hardcoded light moments
