@@ -16,9 +16,9 @@ newtype Pixel = Pixel {getTT :: ((Int, Int), Double)}
     deriving (Eq, Show)
 
 piStep :: Floating a => a
---piStep = pi/5
-piStep = pi/27
---piStep = pi/57
+--piStep = pi/6
+piStep = pi/21
+--piStep = pi/71
 
 scanTriangle :: Triangle Double -> [Pixel]
 scanTriangle (Triangle (a, b, c)) = let

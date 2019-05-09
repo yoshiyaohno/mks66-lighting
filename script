@@ -1,5 +1,8 @@
-/rotate
-/y 30
+scale
+2 2 2
+
+rotate
+y 30
 rotate
 x 10
 move
@@ -9,10 +12,8 @@ sphere
 0 0 0 120
 torus
 0 0 0 30 200
-
 sphere
 120 70 -40 30
-
 
 display
 
