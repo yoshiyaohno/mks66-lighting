@@ -41,7 +41,8 @@ colorTriangle tr =
 plotPxs :: (MonadState ZBuf m) => [Pixel] -> m [Pixel]
 plotPxs pxs = do
     zb <- get
-    let ok = [p | (Pixel p) <- pxs, zb!(fst p) > snd p]
+    let ok = [p | (Pixel p) <- pxs, inRange (bounds zb) (fst p),
+                                    zb!(fst p) > snd p]
     modify $ modZB ok
     return $ map Pixel ok
 
