@@ -102,15 +102,12 @@ bezier args = do
                      (repeat 0) (repeat 1)
     modify $ modScreen $ drawEdges red (T.mmult (getTransform dm) pts)
 
-clean :: (MonadState DrawMats m) => m ()
-clean = modify . modScreen $ const (emptyScreen blk (499,499))
-
 save :: (MonadState DrawMats m, MonadIO m) => Args -> m ()
 save args = do
     let path = head args
     dm <- get
     liftIO $ do
-        writeFile ".tempimg.ppm" (printPixels $ getScreen dm)
+        writeFile ".tempimg.ppm" (printPixels . downsample $ getScreen dm)
         callProcess "convert" [".tempimg.ppm", path]
         removeFile ".tempimg.ppm"
 
@@ -118,7 +115,7 @@ display :: (MonadState DrawMats m, MonadIO m) => m ()
 display = do
     dm <- get
     liftIO $ do
-        writeFile ".tempimg.ppm" (printPixels $ getScreen dm)
+        writeFile ".tempimg.ppm" (printPixels . downsample $ getScreen dm)
         callProcess "eog" [".tempimg.ppm"]
         removeFile ".tempimg.ppm"
 --      (tempName, tempHandle) <- openTempFile "." "disp.ppm"

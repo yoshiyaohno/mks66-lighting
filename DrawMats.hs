@@ -15,9 +15,9 @@ data DrawMats =
 
 emptyDM :: DrawMats
 emptyDM = DrawMats
-    { getScreen = emptyScreen blk (500,500)
+    { getScreen = emptyScreen blk (1000, 1000)
     , getTStack = [ident]
-    , getZBuf   = emptyZB (500,500)
+    , getZBuf   = emptyZB (1000, 1000)
     }
 
 trTris :: DrawMats -> [Triangle Double] -> [Triangle Double]
